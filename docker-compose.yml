@@ -25,7 +25,7 @@ services:
 
   account_db:
     image: postgres:14-alpine
-    platform: linux/amd64
+    
     container_name: account_db
     ports:
       - "5432:5432" # Expose Postgres to your host machine for easy inspection
@@ -36,5 +36,19 @@ services:
     volumes:
       - account_db_data:/var/lib/postgresql/data
 
+  product_db:
+      image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+      platform: linux/amd64
+      container_name: product_db
+      ports:
+        - "9200:9200" # Expose Elasticsearch to your host
+      environment:
+        - discovery.type=single-node
+        - "ES_JAVA_OPTS=-Xms1g -Xmx1g" # Limit memory usage
+        - xpack.security.enabled=false
+      volumes:
+        - product_db_data:/usr/share/elasticsearch/data
+
 volumes:
   account_db_data:
+  product_db_data:
