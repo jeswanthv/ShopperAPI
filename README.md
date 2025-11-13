@@ -28,10 +28,18 @@ docker compose up -d
 source account/venv/bin/activate
 ```
 
-#### 3.Run the server as a module:
+#### 3.Run the Account service as a module:
 
 ```
 python -m account.main
+```
+
+#### 4.Run the Product service as a module:
+
+run in `product` directory:
+
+```
+uvicorn main:app --port 8002 --reload
 ```
 
 ### 3.Run the Test Client
