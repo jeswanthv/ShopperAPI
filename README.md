@@ -6,20 +6,20 @@ This project is a Python re-implementation of a popular Go-based microservices a
 
 ---
 
-## 🚀 Project Status: In Progress (Day 5 of 14)
+## 🚀 Project Status: In Progress (Day 7 of 14)
 
 This project is being built as part of an intensive 2-week learning sprint.
 
 ### Completed:
 
-- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x2), Kafka, and Elasticsearch.
+- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x3), Kafka, and Elasticsearch.
 - [x] **Account Service:** A gRPC service for user registration and login, connected to PostgreSQL.
 - [x] **Product Service:** A FastAPI REST service for creating products, saving them to Elasticsearch, and producing `product_created` events to Kafka.
 - [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB and is ready to serve recommendations.
+- [x] **Order Service:** A gRPC service that handles order creation, communicates with the Product service (HTTP), and publishes `order_created` events to Kafka.
 
 ### Next Steps:
 
-- [ ] **Order Service:** Handle order creation and service-to-service communication.
 - [ ] **Payment Service:** Handle webhooks and update order status.
 - [ ] **GraphQL Gateway:** Unify all services under a single API.
 
@@ -49,9 +49,13 @@ This project consists of several independent services that communicate via gRPC 
   - Consumes events from `product_events` topic to build its own product database.
   - Exposes a gRPC endpoint for product recommendations.
 
-- **Order Service:** (Python, gRPC, PostgreSQL)
+- **Order Service:** (Python, gRPC, PostgreSQL, Kafka Producer)
 
-  - _(In Progress)_
+  - **Port:** `50053` (gRPC)
+  - **Database:** `order_db` (PostgreSQL on port 5434)
+  - Handles order creation.
+  - **Talks to:** `Product Service` (via HTTP) to get prices.
+  - **Publishes:** `order_created` events to the `order_events` Kafka topic.
 
 - **Payment Service:** (Python, gRPC, FastAPI, Kafka Consumer)
 
@@ -66,8 +70,10 @@ This project consists of several independent services that communicate via gRPC 
 
 - **Python 3.10+**
 - **Frameworks:**
-  - **FastAPI:** For REST/HTTP services (Product Service, Gateway).
+  - **FastAPI:** For REST/HTTP services.
   - **gRPC (`grpcio`):** For high-performance service-to-service communication.
+- **HTTP Client:**
+  - **`httpx`**: For synchronous service-to-service HTTP requests.
 - **Database & Storage:**
   - **PostgreSQL** with **SQLAlchemy**: Primary database for `account`, `order`, and `recommender` services.
   - **Elasticsearch**: Search database for the `product` service.
@@ -90,12 +96,13 @@ This project consists of several independent services that communicate via gRPC 
 All databases and message brokers are managed by Docker Compose.
 
 ```bash
+# This starts PostgreSQL (x3), Kafka, and Elasticsearch
 docker-compose up -d
 ```
 
 You can check that the containers are running with `docker ps`.
 
-### 2. Prepare Each Service
+### 2\. Prepare Each Service
 
 Each service runs in its own terminal and has its own virtual environment. Ensure you `pip install -r requirements.txt` in each service's directory.
 
@@ -103,11 +110,13 @@ Each service runs in its own terminal and has its own virtual environment. Ensur
 
 - **Account:** `cd account && source venv/bin/activate && python database.py`
 - **Recommender:** `cd recommender && source venv/bin/activate && python app/db/session.py`
+- **Order:** `cd order && source venv/bin/activate && python database.py`
 
 **Generate gRPC Code:**
 
 - **Account:** `cd account && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/account.proto`
 - **Recommender:** `cd recommender && mkdir -p generated/pb && python -m grpc_tools.protoc -I=. --python_out=./generated/pb --grpc_python_out=./generated/pb recommender.proto`
+- **Order:** `cd order && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/order.proto`
 
 ### 3\. Run the Microservices
 
@@ -151,7 +160,15 @@ python app/entry/main.py
 
 > gRPC server started on port 50052
 
-_(...more terminals will be added here as other services are built...)_
+**Terminal 5: Order Service (gRPC)**
+
+```bash
+cd order
+source venv/bin/activate
+python main.py
+```
+
+> 🚀 Order gRPC server started on port 50053...
 
 ```
 

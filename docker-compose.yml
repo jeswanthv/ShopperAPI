@@ -61,7 +61,20 @@ services:
     volumes:
       - recommender_db_data:/var/lib/postgresql/data
 
+  order_db:
+    image: postgres:14-alpine
+    container_name: order_db
+    ports:
+      - "5434:5432" # Use port 5434 on your host
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: order_db
+    volumes:
+      - order_db_data:/var/lib/postgresql/data
+
 volumes:
   account_db_data:
   product_db_data:
   recommender_db_data:
+  order_db_data:

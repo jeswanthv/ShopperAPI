@@ -99,6 +99,24 @@ def create_product(product: Product):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/products/{product_id}", response_model=ProductInDB)
+def get_product(product_id: str):
+    logger.info(f"Fetching product with ID: {product_id}")
+    try:
+        res = es.get(index="products", id=product_id)
+        if not res['found']:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        return ProductInDB(id=res['_id'], **res['_source'])
+
+    except Exception as e:
+        logger.error(f"Error fetching product: {e}")
+        # 'NotFoundError' is a specific exception from the elasticsearch client
+        if 'NotFoundError' in str(type(e)):
+            raise HTTPException(status_code=404, detail="Product not found")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
