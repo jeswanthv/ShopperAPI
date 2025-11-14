@@ -1,0 +1,28 @@
+# 1. Python Virtual Environments
+venv/
+
+# 2. Python Bytecode & Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 3. Generated gRPC/Protobuf Files
+*_pb2.py
+*_pb2_grpc.py
+
+# 4. IDE / Editor Settings
+.vscode/
+.idea/
+
+# 5. OS-specific Files (macOS)
+.DS_Store
+
+# 6. Test & Coverage Reports
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 7. Environment Files
+.env
+*.env

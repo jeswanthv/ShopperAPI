@@ -1,0 +1,9 @@
+grpcio
+grpcio-tools
+kafka-python
+SQLAlchemy
+psycopg2-binary
+pandas
+scikit-surprise
+requests
+python-dotenv

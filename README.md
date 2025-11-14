@@ -6,71 +6,19 @@ This project is a Python re-implementation of a popular Go-based microservices a
 
 ---
 
-## Account service Setup
-
-## 🚀 How to Run the Service
-
-### 1. Start the Database
-
-From your `shopperAPI` project folder:
-
-```bash
-docker compose up -d
-```
-
-### 2.Run the Main Server
-
-#### 1.Go to your `shopperAPI` root directory.
-
-#### 2. Activate the virtual environment:
-
-```
-source account/venv/bin/activate
-```
-
-#### 3.Run the Account service as a module:
-
-```
-python -m account.main
-```
-
-#### 4.Run the Product service as a module:
-
-run in `product` directory:
-
-```
-uvicorn main:app --port 8002 --reload
-```
-
-### 3.Run the Test Client
-
-#### 1.Open a new terminal and go to the `shopperAPI` root directory.
-
-#### 2.Activate the virtual environment:
-
-```
-source account/venv/bin/activate
-```
-
-#### 3.Run the client as a module:
-
-```
-python -m account.client_test
-```
-
-## 🚀 Project Status: In Progress (Day 3 of 14)
+## 🚀 Project Status: In Progress (Day 5 of 14)
 
 This project is being built as part of an intensive 2-week learning sprint.
 
 ### Completed:
 
-- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL, Kafka, and Elasticsearch.
+- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x2), Kafka, and Elasticsearch.
 - [x] **Account Service:** A gRPC service for user registration and login, connected to PostgreSQL.
 - [x] **Product Service:** A FastAPI REST service for creating products, saving them to Elasticsearch, and producing `product_created` events to Kafka.
+- [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB and is ready to serve recommendations.
 
 ### Next Steps:
 
-- [ ] **Recommender Service:** Consume Kafka events and provide recommendations.
 - [ ] **Order Service:** Handle order creation and service-to-service communication.
 - [ ] **Payment Service:** Handle webhooks and update order status.
 - [ ] **GraphQL Gateway:** Unify all services under a single API.
@@ -82,15 +30,129 @@ This project is being built as part of an intensive 2-week learning sprint.
 This project consists of several independent services that communicate via gRPC (for direct requests) and Kafka (for events).
 
 - **Account Service:** (Python, gRPC, PostgreSQL)
+
+  - **Port:** `50051` (gRPC)
+  - **Database:** `account_db` (PostgreSQL on port 5432)
   - Manages user registration, login, and authentication (JWT).
+
 - **Product Service:** (Python, FastAPI, Elasticsearch, Kafka Producer)
+
+  - **Port:** `8002` (HTTP/FastAPI)
+  - **Database:** `product_db` (Elasticsearch on port 9200)
   - Manages the product catalog (create, read, search).
-  - Saves products to Elasticsearch for fast text search.
-  - Publishes events (e.g., `product_created`) to Kafka.
+  - Publishes events (e.g., `product_created`) to the `product_events` Kafka topic.
+
 - **Recommender Service:** (Python, gRPC, Kafka Consumer)
-  - Consumes events from Kafka to learn about user behavior.
+
+  - **Port:** `50052` (gRPC)
+  - **Database:** `recommender_db` (PostgreSQL on port 5433)
+  - Consumes events from `product_events` topic to build its own product database.
   - Exposes a gRPC endpoint for product recommendations.
+
 - **Order Service:** (Python, gRPC, PostgreSQL)
-  - Handles order creation and history.
-  - Communicates with the Product service to get product details.
-- **Payment Service:** (Python, gRPC, FastAPI, Kafka
+
+  - _(In Progress)_
+
+- **Payment Service:** (Python, gRPC, FastAPI, Kafka Consumer)
+
+  - _(In Progress)_
+
+- **GraphQL Gateway:** (Python, FastAPI, Strawberry)
+  - _(In Progress)_
+
+---
+
+## 🛠️ Technology Stack
+
+- **Python 3.10+**
+- **Frameworks:**
+  - **FastAPI:** For REST/HTTP services (Product Service, Gateway).
+  - **gRPC (`grpcio`):** For high-performance service-to-service communication.
+- **Database & Storage:**
+  - **PostgreSQL** with **SQLAlchemy**: Primary database for `account`, `order`, and `recommender` services.
+  - **Elasticsearch**: Search database for the `product` service.
+- **Messaging:**
+  - **Kafka (`kafka-python`):** As an event bus for asynchronous communication.
+- **GraphQL:**
+  - **Strawberry**: For building the GraphQL API gateway.
+- **DevOps:**
+  - **Docker & Docker Compose**: To build, run, and network all services and databases.
+- **Authentication:**
+  - **`bcrypt`**: For password hashing.
+  - **`python-jose`**: For JWT generation and validation.
+
+---
+
+## 🚀 Getting Started
+
+### 1. Start the Infrastructure
+
+All databases and message brokers are managed by Docker Compose.
+
+```bash
+docker-compose up -d
+```
+
+You can check that the containers are running with `docker ps`.
+
+### 2. Prepare Each Service
+
+Each service runs in its own terminal and has its own virtual environment. Ensure you `pip install -r requirements.txt` in each service's directory.
+
+**One-Time DB Setup:**
+
+- **Account:** `cd account && source venv/bin/activate && python database.py`
+- **Recommender:** `cd recommender && source venv/bin/activate && python app/db/session.py`
+
+**Generate gRPC Code:**
+
+- **Account:** `cd account && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/account.proto`
+- **Recommender:** `cd recommender && mkdir -p generated/pb && python -m grpc_tools.protoc -I=. --python_out=./generated/pb --grpc_python_out=./generated/pb recommender.proto`
+
+### 3\. Run the Microservices
+
+**Terminal 1: Account Service (gRPC)**
+
+```bash
+cd account
+source venv/bin/activate
+python main.py
+```
+
+> 🚀 Account gRPC server started on port 50051...
+
+**Terminal 2: Product Service (FastAPI)**
+
+```bash
+cd product
+source venv/bin/activate
+uvicorn main:app --port 8002 --reload
+```
+
+> INFO: Uvicorn running on https://www.google.com/search?q=http://127.0.0.1:8002 (Press CTRL+C to quit)
+
+**Terminal 3: Recommender Consumer (Kafka)**
+
+```bash
+cd recommender
+source venv/bin/activate
+python app/entry/sync.py
+```
+
+> Kafka consumer connected, listening for 'product_events'...
+
+**Terminal 4: Recommender Server (gRPC)**
+
+```bash
+cd recommender
+source venv/bin/activate
+python app/entry/main.py
+```
+
+> gRPC server started on port 50052
+
+_(...more terminals will be added here as other services are built...)_
+
+```
+
+```

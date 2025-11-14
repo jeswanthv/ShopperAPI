@@ -49,6 +49,19 @@ services:
       volumes:
         - product_db_data:/usr/share/elasticsearch/data
 
+  recommender_db:
+    image: postgres:14-alpine
+    container_name: recommender_db
+    ports:
+      - "5433:5432" # Use port 5433 on your host to avoid conflict with account_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: recommender_db
+    volumes:
+      - recommender_db_data:/var/lib/postgresql/data
+
 volumes:
   account_db_data:
   product_db_data:
+  recommender_db_data:
