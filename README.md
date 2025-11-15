@@ -6,21 +6,22 @@ This project is a Python re-implementation of a popular Go-based microservices a
 
 ---
 
-## 🚀 Project Status: In Progress (Day 7 of 14)
+## 🚀 Project Status: In Progress (Day 10 of 14)
 
 This project is being built as part of an intensive 2-week learning sprint.
 
 ### Completed:
 
-- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x3), Kafka, and Elasticsearch.
-- [x] **Account Service:** A gRPC service for user registration and login, connected to PostgreSQL.
-- [x] **Product Service:** A FastAPI REST service for creating products, saving them to Elasticsearch, and producing `product_created` events to Kafka.
-- [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB and is ready to serve recommendations.
-- [x] **Order Service:** A gRPC service that handles order creation, communicates with the Product service (HTTP), and publishes `order_created` events to Kafka.
+- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x4), Kafka, and Elasticsearch.
+- [x] **Account Service:** A gRPC service for user registration and login.
+- [x] **Product Service:** A FastAPI REST service for product CRUD and producing Kafka events.
+- [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB.
+- [x] **Order Service:** A gRPC service that handles order creation and service-to-service communication.
+- [x] **Payment Service:** A hybrid service (gRPC, FastAPI, Kafka Consumer) to manage transactions and webhooks.
 
 ### Next Steps:
 
-- [ ] **Payment Service:** Handle webhooks and update order status.
+- [ ] **Final Integration:** Connect the `Payment` service's webhook back to the `Order` service.
 - [ ] **GraphQL Gateway:** Unify all services under a single API.
 
 ---
@@ -40,7 +41,7 @@ This project consists of several independent services that communicate via gRPC 
   - **Port:** `8002` (HTTP/FastAPI)
   - **Database:** `product_db` (Elasticsearch on port 9200)
   - Manages the product catalog (create, read, search).
-  - Publishes events (e.g., `product_created`) to the `product_events` Kafka topic.
+  - Publishes events to the `product_events` Kafka topic.
 
 - **Recommender Service:** (Python, gRPC, Kafka Consumer)
 
@@ -59,7 +60,11 @@ This project consists of several independent services that communicate via gRPC 
 
 - **Payment Service:** (Python, gRPC, FastAPI, Kafka Consumer)
 
-  - _(In Progress)_
+  - **Ports:** `50054` (gRPC) & `8003` (HTTP/FastAPI)
+  - **Database:** `payment_db` (PostgreSQL on port 5435)
+  - **Consumes:** `product_events` to maintain a local price list.
+  - **gRPC API:** Exposes `CreateCheckoutSession`.
+  - **FastAPI API:** Exposes `/webhook/payment` to receive payment status updates.
 
 - **GraphQL Gateway:** (Python, FastAPI, Strawberry)
   - _(In Progress)_
@@ -70,12 +75,12 @@ This project consists of several independent services that communicate via gRPC 
 
 - **Python 3.10+**
 - **Frameworks:**
-  - **FastAPI:** For REST/HTTP services.
+  - **FastAPI:** For REST/HTTP services and webhooks.
   - **gRPC (`grpcio`):** For high-performance service-to-service communication.
 - **HTTP Client:**
-  - **`httpx`**: For synchronous service-to-service HTTP requests.
+  - **`httpx`**: For synchronous & asynchronous service-to-service HTTP requests.
 - **Database & Storage:**
-  - **PostgreSQL** with **SQLAlchemy**: Primary database for `account`, `order`, and `recommender` services.
+  - **PostgreSQL** with **SQLAlchemy**: Primary database for `account`, `order`, `recommender`, and `payment` services.
   - **Elasticsearch**: Search database for the `product` service.
 - **Messaging:**
   - **Kafka (`kafka-python`):** As an event bus for asynchronous communication.
@@ -96,13 +101,11 @@ This project consists of several independent services that communicate via gRPC 
 All databases and message brokers are managed by Docker Compose.
 
 ```bash
-# This starts PostgreSQL (x3), Kafka, and Elasticsearch
+# This starts PostgreSQL (x4), Kafka, and Elasticsearch
 docker-compose up -d
 ```
 
-You can check that the containers are running with `docker ps`.
-
-### 2\. Prepare Each Service
+### 2. Prepare Each Service
 
 Each service runs in its own terminal and has its own virtual environment. Ensure you `pip install -r requirements.txt` in each service's directory.
 
@@ -111,12 +114,14 @@ Each service runs in its own terminal and has its own virtual environment. Ensur
 - **Account:** `cd account && source venv/bin/activate && python database.py`
 - **Recommender:** `cd recommender && source venv/bin/activate && python app/db/session.py`
 - **Order:** `cd order && source venv/bin/activate && python database.py`
+- **Payment:** `cd payment && source venv/bin/activate && python database.py`
 
 **Generate gRPC Code:**
 
 - **Account:** `cd account && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/account.proto`
 - **Recommender:** `cd recommender && mkdir -p generated/pb && python -m grpc_tools.protoc -I=. --python_out=./generated/pb --grpc_python_out=./generated/pb recommender.proto`
 - **Order:** `cd order && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/order.proto`
+- **Payment:** `cd payment && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/payment.proto`
 
 ### 3\. Run the Microservices
 
@@ -169,6 +174,27 @@ python main.py
 ```
 
 > 🚀 Order gRPC server started on port 50053...
+
+**Terminal 6: Payment Consumer (Kafka)**
+
+```bash
+cd payment
+source venv/bin/activate
+python consumer.py
+```
+
+> INFO:root:Kafka consumer connected, listening for 'product_events'...
+
+**Terminal 7: Payment Server (gRPC + FastAPI)**
+
+```bash
+cd payment
+source venv/bin/activate
+python main.py
+```
+
+> INFO:root:🚀 Payment gRPC server started on port 50054...
+> INFO:root:🚀 Payment FastAPI server started on port 8003...
 
 ```
 

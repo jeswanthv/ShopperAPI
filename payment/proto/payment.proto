@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+// import "google/protobuf/wrappers.proto";
+
+
+package pb;
+
+option go_package = "./pb";
+
+
+message CartItem {
+  string product_id = 1;
+  uint64 quantity = 2;
+}
+
+message CreateCheckoutRequest {
+  uint64 user_id = 1;
+  uint64 order_id = 2;
+  string email = 3;
+  repeated CartItem products = 4;
+}
+
+// Returns a URL for the user to visit
+message CreateCheckoutResponse {
+  string checkout_url = 1;
+}
+
+service PaymentService {
+  rpc CreateCheckoutSession (CreateCheckoutRequest) returns (CreateCheckoutResponse);
+}
