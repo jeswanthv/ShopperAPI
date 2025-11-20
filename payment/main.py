@@ -7,9 +7,12 @@ import httpx  # For calling the Order service
 from concurrent import futures
 from sqlalchemy.orm import Session
 from fastapi import FastAPI, Request, HTTPException
+import grpc.aio
+import time
 
 # gRPC imports
 from .proto.pb import payment_pb2, payment_pb2_grpc
+from .proto.pb import order_pb2, order_pb2_grpc
 
 # FastAPI imports
 from fastapi import FastAPI
@@ -76,23 +79,19 @@ class PaymentService(payment_pb2_grpc.PaymentServiceServicer):
 
 app = FastAPI()
 
+ORDER_SERVICE_GRPC_URL = 'localhost:50053'
+
 
 @app.post("/webhook/payment")
 async def payment_webhook(request: Request):
-    """
-    Simulated webhook from our payment provider.
-    This is what the provider calls *after* the user pays.
-    """
-    data = await request.json()
-    transaction_id = data.get("transaction_id")
-    payment_status = data.get("status")  # "SUCCESS" or "FAILED"
+    # ... (data = await request.json(), etc.)
 
     logger.info(
         f"Webhook received for transaction {transaction_id} with status {payment_status}")
 
     db: Session = SessionLocal()
     try:
-        # 1. Find the transaction
+        # 1. Find and Update the transaction
         transaction = db.query(Transaction).filter_by(
             id=transaction_id).first()
         if not transaction:
@@ -100,30 +99,32 @@ async def payment_webhook(request: Request):
             raise HTTPException(
                 status_code=404, detail="Transaction not found")
 
-        # 2. Update its status
         transaction.status = payment_status
         transaction.payment_gateway_id = data.get(
-            "payment_gateway_id", "sim_123")  # A simulated ID
+            "payment_gateway_id", "sim_123")
         db.commit()
 
-        # 3. --- IMPORTANT ---
+        # 2. --- UN-MOCK THE CALL ---
         # Call the Order service to update its status
-        # We will add this RPC to the Order service next (Day 9)
+        if payment_status == "SUCCESS":  # Only update if payment was successful
+            logger.info(
+                f"Calling Order service to update order {transaction.order_id} to PAID")
 
-        # MOCK CALL FOR NOW:
-        logger.info(
-            f"Calling Order service to update order {transaction.order_id} to {payment_status}")
-        # order_service_url = 'localhost:50053' # Order gRPC port
-        # async with grpc.aio.insecure_channel(order_service_url) as channel:
-        #     stub = order_pb2_grpc.OrderServiceStub(channel)
-        #     await stub.UpdateOrderStatus(
-        #         order_pb2.UpdateOrderStatusRequest(order_id=transaction.order_id, status=payment_status)
-        #     )
+            async with grpc.aio.insecure_channel(ORDER_SERVICE_GRPC_URL) as channel:
+                stub = order_pb2_grpc.OrderServiceStub(channel)
+                await stub.UpdateOrderStatus(
+                    order_pb2.UpdateOrderStatusRequest(
+                        order_id=transaction.order_id,
+                        status="PAID"  # Set a clear status
+                    )
+                )
+            logger.info(
+                f"Order service updated for order {transaction.order_id}")
 
         return {"status": "webhook received"}
 
     except Exception as e:
-        logger.error(f"Error in webhook: {e}")
+        logger.error(f"Error in payment_webhook: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Internal server error")
     finally:

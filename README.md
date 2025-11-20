@@ -6,7 +6,7 @@ This project is a Python re-implementation of a popular Go-based microservices a
 
 ---
 
-## 🚀 Project Status: In Progress (Day 10 of 14)
+## 🚀 Project Status: In Progress (Day 11 of 14)
 
 This project is being built as part of an intensive 2-week learning sprint.
 
@@ -16,12 +16,12 @@ This project is being built as part of an intensive 2-week learning sprint.
 - [x] **Account Service:** A gRPC service for user registration and login.
 - [x] **Product Service:** A FastAPI REST service for product CRUD and producing Kafka events.
 - [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB.
-- [x] **Order Service:** A gRPC service that handles order creation and service-to-service communication.
-- [x] **Payment Service:** A hybrid service (gRPC, FastAPI, Kafka Consumer) to manage transactions and webhooks.
+- [x] **Order Service:** A gRPC service that handles order creation and status updates.
+- [x] **Payment Service:** A hybrid service that manages transactions and webhooks.
+- [x] **Integration Loop:** The Payment service successfully calls the Order service via gRPC to update order status upon payment success.
 
 ### Next Steps:
 
-- [ ] **Final Integration:** Connect the `Payment` service's webhook back to the `Order` service.
 - [ ] **GraphQL Gateway:** Unify all services under a single API.
 
 ---
@@ -57,6 +57,7 @@ This project consists of several independent services that communicate via gRPC 
   - Handles order creation.
   - **Talks to:** `Product Service` (via HTTP) to get prices.
   - **Publishes:** `order_created` events to the `order_events` Kafka topic.
+  - **Accepts:** `UpdateOrderStatus` RPC calls from the Payment service.
 
 - **Payment Service:** (Python, gRPC, FastAPI, Kafka Consumer)
 
@@ -65,6 +66,7 @@ This project consists of several independent services that communicate via gRPC 
   - **Consumes:** `product_events` to maintain a local price list.
   - **gRPC API:** Exposes `CreateCheckoutSession`.
   - **FastAPI API:** Exposes `/webhook/payment` to receive payment status updates.
+  - **Talks to:** `Order Service` (via gRPC) to update order status to "PAID".
 
 - **GraphQL Gateway:** (Python, FastAPI, Strawberry)
   - _(In Progress)_
@@ -105,7 +107,7 @@ All databases and message brokers are managed by Docker Compose.
 docker-compose up -d
 ```
 
-### 2. Prepare Each Service
+### 2\. Prepare Each Service
 
 Each service runs in its own terminal and has its own virtual environment. Ensure you `pip install -r requirements.txt` in each service's directory.
 
@@ -122,6 +124,7 @@ Each service runs in its own terminal and has its own virtual environment. Ensur
 - **Recommender:** `cd recommender && mkdir -p generated/pb && python -m grpc_tools.protoc -I=. --python_out=./generated/pb --grpc_python_out=./generated/pb recommender.proto`
 - **Order:** `cd order && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/order.proto`
 - **Payment:** `cd payment && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/payment.proto`
+  - _Note: Payment service also requires generating code for `order.proto` to act as a client._
 
 ### 3\. Run the Microservices
 
@@ -195,7 +198,3 @@ python main.py
 
 > INFO:root:🚀 Payment gRPC server started on port 50054...
 > INFO:root:🚀 Payment FastAPI server started on port 8003...
-
-```
-
-```

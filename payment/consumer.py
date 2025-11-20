@@ -2,8 +2,8 @@ import json
 import logging
 from kafka import KafkaConsumer
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from models import Product
+from .database import SessionLocal
+from .models import Product
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -134,8 +134,40 @@ class OrderService(order_pb2_grpc.OrderServiceServicer):
         finally:
             db.close()
 
+    def UpdateOrderStatus(self, request, context):
+        logger.info(
+            f"UpdateOrderStatus request for order ID: {request.order_id} to {request.status}")
+        db: Session = SessionLocal()
+        try:
+            # 1. Find the order
+            order = db.query(Order).filter(
+                Order.id == request.order_id).first()
+            if not order:
+                context.set_details('Order not found')
+                context.set_code(grpc.StatusCode.NOT_FOUND)
+                return order_pb2.UpdateOrderStatusResponse()
+
+            # 2. Update the status
+            order.status = request.status
+            db.commit()
+
+            logger.info(f"Order {order.id} status updated to {order.status}")
+
+            # 3. We could publish another Kafka event here, e.g., 'order_paid'
+
+            return order_pb2.UpdateOrderStatusResponse()
+
+        except Exception as e:
+            logger.error(f"Error updating order status: {e}")
+            db.rollback()
+            context.set_details(f'Internal server error: {e}')
+            context.set_code(grpc.StatusCode.INTERNAL)
+            return order_pb2.UpdateOrderStatusResponse()
+        finally:
+            db.close()
 
 # --- Server Setup ---
+
 
 def serve():
     create_db_and_tables()
