@@ -1,200 +1,166 @@
-# Python Microservices: E-Commerce API (FastAPI, gRPC, Kafka)
+# Python Microservices: E-Commerce API (FastAPI, gRPC, Kafka, GraphQL)
 
-This repository documents my journey building a complete e-commerce microservices backend from scratch in Python. The goal is to learn and implement a modern backend architecture using decoupled services, gRPC, and event-driven patterns with Kafka.
+This repository contains a complete e-commerce microservices backend built from scratch in Python. It demonstrates a modern, decoupled architecture using gRPC for internal communication, Kafka for event-driven data flow, and a GraphQL gateway as the public-facing API.
 
-This project is a Python re-implementation of a popular Go-based microservices architecture.
+This project is a Python re-implementation of a popular Go-based microservices architecture, built as part of an intensive 2-week learning sprint.
 
 ---
 
-## 🚀 Project Status: In Progress (Day 11 of 14)
+## 🚀 Project Status: Completed ✅
 
-This project is being built as part of an intensive 2-week learning sprint.
+All planned services and integrations have been implemented.
 
-### Completed:
+### Features Implemented:
 
-- [x] **Core Infrastructure:** `docker-compose.yaml` with PostgreSQL (x4), Kafka, and Elasticsearch.
-- [x] **Account Service:** A gRPC service for user registration and login.
-- [x] **Product Service:** A FastAPI REST service for product CRUD and producing Kafka events.
-- [x] **Recommender Service:** A gRPC service that consumes Kafka events to its own DB.
-- [x] **Order Service:** A gRPC service that handles order creation and status updates.
-- [x] **Payment Service:** A hybrid service that manages transactions and webhooks.
-- [x] **Integration Loop:** The Payment service successfully calls the Order service via gRPC to update order status upon payment success.
-
-### Next Steps:
-
-- [ ] **GraphQL Gateway:** Unify all services under a single API.
+- [x] **Core Infrastructure:** Docker Compose setup with PostgreSQL (x4), Kafka, Zookeeper, and Elasticsearch.
+- [x] **Account Service:** gRPC service for secure user registration and login (JWT).
+- [x] **Product Service:** FastAPI REST service for product management, Elasticsearch indexing, and Kafka event publishing.
+- [x] **Recommender Service:** Hybrid service that consumes Kafka events to build a local dataset and serves recommendations via gRPC.
+- [x] **Order Service:** gRPC service for order management; acts as an HTTP client to fetch product prices and a Kafka producer for order events.
+- [x] **Payment Service:** Complex hybrid service handling transactions, consuming product events, and processing webhooks to update order status via gRPC.
+- [x] **GraphQL Gateway:** A unified API Gateway (Strawberry) that federates requests to all backend microservices.
 
 ---
 
 ## 🏗️ System Architecture
 
-This project consists of several independent services that communicate via gRPC (for direct requests) and Kafka (for events).
+The system uses a **Gateway Pattern**. Clients communicate only with the GraphQL Gateway, which routes requests to backend services using gRPC or HTTP. Asynchronous tasks (like recommendations or data syncing) are handled via Kafka events.
 
-- **Account Service:** (Python, gRPC, PostgreSQL)
+### Service Breakdown
 
-  - **Port:** `50051` (gRPC)
-  - **Database:** `account_db` (PostgreSQL on port 5432)
-  - Manages user registration, login, and authentication (JWT).
-
-- **Product Service:** (Python, FastAPI, Elasticsearch, Kafka Producer)
-
-  - **Port:** `8002` (HTTP/FastAPI)
-  - **Database:** `product_db` (Elasticsearch on port 9200)
-  - Manages the product catalog (create, read, search).
-  - Publishes events to the `product_events` Kafka topic.
-
-- **Recommender Service:** (Python, gRPC, Kafka Consumer)
-
-  - **Port:** `50052` (gRPC)
-  - **Database:** `recommender_db` (PostgreSQL on port 5433)
-  - Consumes events from `product_events` topic to build its own product database.
-  - Exposes a gRPC endpoint for product recommendations.
-
-- **Order Service:** (Python, gRPC, PostgreSQL, Kafka Producer)
-
-  - **Port:** `50053` (gRPC)
-  - **Database:** `order_db` (PostgreSQL on port 5434)
-  - Handles order creation.
-  - **Talks to:** `Product Service` (via HTTP) to get prices.
-  - **Publishes:** `order_created` events to the `order_events` Kafka topic.
-  - **Accepts:** `UpdateOrderStatus` RPC calls from the Payment service.
-
-- **Payment Service:** (Python, gRPC, FastAPI, Kafka Consumer)
-
-  - **Ports:** `50054` (gRPC) & `8003` (HTTP/FastAPI)
-  - **Database:** `payment_db` (PostgreSQL on port 5435)
-  - **Consumes:** `product_events` to maintain a local price list.
-  - **gRPC API:** Exposes `CreateCheckoutSession`.
-  - **FastAPI API:** Exposes `/webhook/payment` to receive payment status updates.
-  - **Talks to:** `Order Service` (via gRPC) to update order status to "PAID".
-
-- **GraphQL Gateway:** (Python, FastAPI, Strawberry)
-  - _(In Progress)_
+| Service         | Type      | Port             | Database | Responsibility                                          |
+| :-------------- | :-------- | :--------------- | :------- | :------------------------------------------------------ |
+| **Gateway**     | GraphQL   | `8080`           | -        | Unified entry point; aggregates data from all services. |
+| **Account**     | gRPC      | `50051`          | Postgres | User auth & management.                                 |
+| **Product**     | HTTP      | `8002`           | Elastic  | Product catalog & search.                               |
+| **Recommender** | gRPC      | `50052`          | Postgres | Product recommendations (ML).                           |
+| **Order**       | gRPC      | `50053`          | Postgres | Order processing & history.                             |
+| **Payment**     | gRPC/HTTP | `50054` / `8003` | Postgres | Payments & Webhook processing.                          |
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Python 3.10+**
+- **Language:** Python 3.10+
 - **Frameworks:**
-  - **FastAPI:** For REST/HTTP services and webhooks.
-  - **gRPC (`grpcio`):** For high-performance service-to-service communication.
-- **HTTP Client:**
-  - **`httpx`**: For synchronous & asynchronous service-to-service HTTP requests.
-- **Database & Storage:**
-  - **PostgreSQL** with **SQLAlchemy**: Primary database for `account`, `order`, `recommender`, and `payment` services.
-  - **Elasticsearch**: Search database for the `product` service.
+  - **FastAPI:** High-performance web framework for REST and GraphQL.
+  - **gRPC (`grpcio`):** Internal service-to-service communication.
+  - **Strawberry:** GraphQL library for Python.
+- **Data:**
+  - **PostgreSQL:** Relational data (SQLAlchemy ORM).
+  - **Elasticsearch:** Full-text search engine.
 - **Messaging:**
-  - **Kafka (`kafka-python`):** As an event bus for asynchronous communication.
-- **GraphQL:**
-  - **Strawberry**: For building the GraphQL API gateway.
-- **DevOps:**
-  - **Docker & Docker Compose**: To build, run, and network all services and databases.
-- **Authentication:**
-  - **`bcrypt`**: For password hashing.
-  - **`python-jose`**: For JWT generation and validation.
+  - **Apache Kafka:** Event streaming platform (`kafka-python`).
+- **Infrastructure:**
+  - **Docker & Docker Compose:** Container orchestration.
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Start the Infrastructure
+### 1. Start Infrastructure
 
-All databases and message brokers are managed by Docker Compose.
+Run the following to start all databases (PostgreSQL, Elasticsearch) and the message broker (Kafka/Zookeeper).
 
 ```bash
-# This starts PostgreSQL (x4), Kafka, and Elasticsearch
 docker-compose up -d
 ```
 
-### 2\. Prepare Each Service
+### 2\. Setup Services
 
-Each service runs in its own terminal and has its own virtual environment. Ensure you `pip install -r requirements.txt` in each service's directory.
+Open separate terminals for each service. For the first run, install dependencies and setup the database in each folder:
 
-**One-Time DB Setup:**
+```bash
+# Example for one service (repeat for account, product, etc.)
+cd service_name
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-- **Account:** `cd account && source venv/bin/activate && python database.py`
-- **Recommender:** `cd recommender && source venv/bin/activate && python app/db/session.py`
-- **Order:** `cd order && source venv/bin/activate && python database.py`
-- **Payment:** `cd payment && source venv/bin/activate && python database.py`
-
-**Generate gRPC Code:**
-
-- **Account:** `cd account && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/account.proto`
-- **Recommender:** `cd recommender && mkdir -p generated/pb && python -m grpc_tools.protoc -I=. --python_out=./generated/pb --grpc_python_out=./generated/pb recommender.proto`
-- **Order:** `cd order && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/order.proto`
-- **Payment:** `cd payment && python -m grpc_tools.protoc -I=./proto --python_out=. --grpc_python_out=. ./proto/payment.proto`
-  - _Note: Payment service also requires generating code for `order.proto` to act as a client._
+# Run DB setup script (if applicable)
+python database.py
+```
 
 ### 3\. Run the Microservices
 
-**Terminal 1: Account Service (gRPC)**
+You will need **8 terminals** to run the full stack (servers + consumers).
 
-```bash
-cd account
-source venv/bin/activate
-python main.py
+1.  **Account Service:**
+    `cd account && python main.py`
+2.  **Product Service:**
+    `cd product && uvicorn main:app --port 8002 --reload`
+3.  **Recommender Consumer:**
+    `cd recommender && python app/entry/sync.py`
+4.  **Recommender Server:**
+    `cd recommender && python app/entry/main.py`
+5.  **Order Service:**
+    `cd order && python main.py`
+6.  **Payment Consumer:**
+    `cd payment && python consumer.py`
+7.  **Payment Server:**
+    `cd payment && python main.py`
+8.  **GraphQL Gateway:**
+    `cd graphql && uvicorn main:app --port 8080 --reload`
+
+---
+
+## 🎮 Usage (GraphQL Playground)
+
+Once everything is running, open your browser to:
+👉 **http://localhost:8080/graphql**
+
+You can use the interactive Playground to test the entire flow:
+
+**1. Create a User**
+
+```graphql
+mutation {
+  register(name: "Test User", email: "user@test.com", password: "password123") {
+    token
+  }
+}
 ```
 
-> 🚀 Account gRPC server started on port 50051...
+**2. Get Recommendations**
 
-**Terminal 2: Product Service (FastAPI)**
-
-```bash
-cd product
-source venv/bin/activate
-uvicorn main:app --port 8002 --reload
+```graphql
+query {
+  recommendations(userId: "1") {
+    id
+    name
+    price
+  }
+}
 ```
 
-> INFO: Uvicorn running on https://www.google.com/search?q=http://127.0.0.1:8002 (Press CTRL+C to quit)
+**3. Create an Order**
 
-**Terminal 3: Recommender Consumer (Kafka)**
-
-```bash
-cd recommender
-source venv/bin/activate
-python app/entry/sync.py
+```graphql
+mutation {
+  createOrder(
+    accountId: 1
+    products: [{ productId: "YOUR_PRODUCT_ID", quantity: 1 }]
+  ) {
+    id
+    totalPrice
+    status
+  }
+}
 ```
 
-> Kafka consumer connected, listening for 'product_events'...
+**4. Pay for Order**
 
-**Terminal 4: Recommender Server (gRPC)**
-
-```bash
-cd recommender
-source venv/bin/activate
-python app/entry/main.py
+```graphql
+mutation {
+  checkout(
+    userId: 1
+    orderId: 1
+    email: "user@test.com"
+    products: [{ productId: "YOUR_PRODUCT_ID", quantity: 1 }]
+  ) {
+    checkoutUrl
+  }
+}
 ```
 
-> gRPC server started on port 50052
-
-**Terminal 5: Order Service (gRPC)**
-
-```bash
-cd order
-source venv/bin/activate
-python main.py
-```
-
-> 🚀 Order gRPC server started on port 50053...
-
-**Terminal 6: Payment Consumer (Kafka)**
-
-```bash
-cd payment
-source venv/bin/activate
-python consumer.py
-```
-
-> INFO:root:Kafka consumer connected, listening for 'product_events'...
-
-**Terminal 7: Payment Server (gRPC + FastAPI)**
-
-```bash
-cd payment
-source venv/bin/activate
-python main.py
-```
-
-> INFO:root:🚀 Payment gRPC server started on port 50054...
-> INFO:root:🚀 Payment FastAPI server started on port 8003...
+_(Click the returned `checkoutUrl` to simulate a successful payment\!)_

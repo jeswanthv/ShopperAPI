@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "./pb";
+
+message OrderProduct {
+  string product_id = 1;
+  uint32 quantity = 2;
+}
+
+message CreateOrderRequest {
+  uint64 account_id = 1;
+  repeated OrderProduct products = 2;
+}
+
+message Order {
+  uint64 id = 1;
+  uint64 account_id = 2;
+  double total_price = 3;
+  string status = 4;
+  repeated OrderProduct products = 5;
+}
+
+message CreateOrderResponse {
+  Order order = 1;
+}
+
+message UpdateOrderStatusRequest {
+  uint64 order_id = 1;
+  string status = 2;
+}
+
+message UpdateOrderStatusResponse {}
+
+service OrderService {
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (UpdateOrderStatusResponse);
+}
