@@ -2,8 +2,6 @@
 
 This repository contains a complete e-commerce microservices backend built from scratch in Python. It demonstrates a modern, decoupled architecture using gRPC for internal communication, Kafka for event-driven data flow, and a GraphQL gateway as the public-facing API.
 
-This project is a Python re-implementation of a popular Go-based microservices architecture, built as part of an intensive 2-week learning sprint.
-
 ---
 
 ## 🚀 Project Status: Completed ✅
