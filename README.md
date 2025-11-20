@@ -4,9 +4,9 @@ This repository contains a complete e-commerce microservices backend built from 
 
 ---
 
-## 🚀 Project Status: Completed ✅
+## 🚀 Project Status: Backend Completed / Ready for UI ✅
 
-All planned services and integrations have been implemented.
+The entire backend infrastructure is operational. The project is now ready for a frontend application (React, Vue, Mobile) to be connected.
 
 ### Features Implemented:
 
@@ -17,6 +17,12 @@ All planned services and integrations have been implemented.
 - [x] **Order Service:** gRPC service for order management; acts as an HTTP client to fetch product prices and a Kafka producer for order events.
 - [x] **Payment Service:** Complex hybrid service handling transactions, consuming product events, and processing webhooks to update order status via gRPC.
 - [x] **GraphQL Gateway:** A unified API Gateway (Strawberry) that federates requests to all backend microservices.
+
+### 🔮 Future Enhancements (Phase 2):
+
+- [ ] **Frontend UI:** Build a React/Next.js dashboard to visualize products and orders.
+- [ ] **Authentication UI:** Login/Register forms consuming the GraphQL mutations.
+- [ ] **Real-time Updates:** Use GraphQL Subscriptions for real-time order status updates.
 
 ---
 
