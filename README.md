@@ -28,6 +28,9 @@ The entire backend infrastructure is operational. The project is now ready for a
 
 ## 🏗️ System Architecture
 
+<img width="3199" height="1291" alt="image" src="https://github.com/user-attachments/assets/fb93872c-1f34-49f5-bf2a-d9cc78e19d60" />
+
+
 The system uses a **Gateway Pattern**. Clients communicate only with the GraphQL Gateway, which routes requests to backend services using gRPC or HTTP. Asynchronous tasks (like recommendations or data syncing) are handled via Kafka events.
 
 ### Service Breakdown
