@@ -63,7 +63,60 @@ The system uses a **Gateway Pattern**. Clients communicate only with the GraphQL
 
 ---
 
-## 🚀 Getting Started
+Here is a **Developer Commands** section you can add to your `README.md`. It documents the `Makefile` commands we just set up, making it much easier for others (and future you) to run the project.
+
+You can add this right after the **"Getting Started"** section.
+
+````markdown
+## ⚡ Quick Start (Makefile)
+
+To simplify development, a `Makefile` is included to automate the setup, generation of gRPC code, and running of services.
+
+### Prerequisites
+
+- Python 3.10+
+- Docker & Docker Compose
+- `pip`
+
+### Available Commands
+
+| Command            | Description                                                                                                            |
+| :----------------- | :--------------------------------------------------------------------------------------------------------------------- |
+| **`make infra`**   | Starts the Docker infrastructure (Postgres, Kafka, Elasticsearch, Zookeeper).                                          |
+| **`make install`** | Iterates through all service folders, creates virtual environments, and installs dependencies from `requirements.txt`. |
+| **`make protos`**  | Compiles `.proto` files into Python gRPC code for all services.                                                        |
+| **`make db`**      | Runs the database initialization scripts for Account, Order, Payment, and Recommender services.                        |
+| **`make run`**     | Uses `honcho` to run **all 8 services** (servers + consumers) + the Frontend in a single terminal window.              |
+
+### 🚀 The "Zero to Hero" Workflow
+
+If you are setting this up on a fresh machine, run these commands in order:
+
+1. **Start Infrastructure:**
+   ```bash
+   make infra
+   ```
+````
+
+2.  **Setup Project:**
+
+        ```bash
+        make install
+        make protos
+        make db
+        ```
+
+    _(Wait a moment for databases to initialize)_
+
+3.  **Run Everything:**
+
+    ```bash
+    make run
+    ```
+
+    _All backend logs will appear in this terminal with different colors. Press `Ctrl+C` to stop everything._
+
+## 🚀 Getting Started(Verbose way)
 
 ### 1. Start Infrastructure
 
@@ -72,6 +125,8 @@ Run the following to start all databases (PostgreSQL, Elasticsearch) and the mes
 ```bash
 docker-compose up -d
 ```
+
+````
 
 ### 2\. Setup Services
 
@@ -86,7 +141,7 @@ pip install -r requirements.txt
 
 # Run DB setup script (if applicable)
 python database.py
-```
+````
 
 ### 3\. Run the Microservices
 
@@ -171,3 +226,7 @@ mutation {
 ```
 
 _(Click the returned `checkoutUrl` to simulate a successful payment\!)_
+
+```
+
+```

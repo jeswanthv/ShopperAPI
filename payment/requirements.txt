@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+grpcio
+grpcio-tools
+kafka-python
+httpx
+python-dotenv

@@ -1,0 +1,11 @@
+# --- Services ---
+
+account:      account/venv/bin/python -m account.main
+product:      product/venv/bin/uvicorn product.main:app --port 8002
+rec_sync:     cd recommender && venv/bin/python -m app.entry.sync
+rec_server:   cd recommender && venv/bin/python -m app.entry.main
+order:        order/venv/bin/python -m order.main
+pay_consumer: payment/venv/bin/python -m payment.consumer
+pay_server:   payment/venv/bin/python -m payment.main
+
+gateway:      gateway/venv/bin/uvicorn gateway.main:app --port 8080

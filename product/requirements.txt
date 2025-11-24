@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+elasticsearch<9.0.0
+kafka-python
+python-dotenv
+pydantic

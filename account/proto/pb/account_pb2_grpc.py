@@ -12,8 +12,7 @@ _version_not_supported = False
 
 try:
     from grpc._utilities import first_version_is_lower
-    _version_not_supported = first_version_is_lower(
-        GRPC_VERSION, GRPC_GENERATED_VERSION)
+    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
 except ImportError:
     _version_not_supported = True
 
@@ -37,20 +36,20 @@ class AccountServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Register = channel.unary_unary(
-            '/pb.AccountService/Register',
-            request_serializer=account__pb2.RegisterRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.FromString,
-            _registered_method=True)
+                '/pb.AccountService/Register',
+                request_serializer=account__pb2.RegisterRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.FromString,
+                _registered_method=True)
         self.Login = channel.unary_unary(
-            '/pb.AccountService/Login',
-            request_serializer=account__pb2.LoginRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.FromString,
-            _registered_method=True)
+                '/pb.AccountService/Login',
+                request_serializer=account__pb2.LoginRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.FromString,
+                _registered_method=True)
         self.GetAccount = channel.unary_unary(
-            '/pb.AccountService/GetAccount',
-            request_serializer=google_dot_protobuf_dot_wrappers__pb2.UInt64Value.SerializeToString,
-            response_deserializer=account__pb2.AccountResponse.FromString,
-            _registered_method=True)
+                '/pb.AccountService/GetAccount',
+                request_serializer=google_dot_protobuf_dot_wrappers__pb2.UInt64Value.SerializeToString,
+                response_deserializer=account__pb2.AccountResponse.FromString,
+                _registered_method=True)
 
 
 class AccountServiceServicer(object):
@@ -77,45 +76,43 @@ class AccountServiceServicer(object):
 
 def add_AccountServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        'Register': grpc.unary_unary_rpc_method_handler(
-            servicer.Register,
-            request_deserializer=account__pb2.RegisterRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.SerializeToString,
-        ),
-        'Login': grpc.unary_unary_rpc_method_handler(
-            servicer.Login,
-            request_deserializer=account__pb2.LoginRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.SerializeToString,
-        ),
-        'GetAccount': grpc.unary_unary_rpc_method_handler(
-            servicer.GetAccount,
-            request_deserializer=google_dot_protobuf_dot_wrappers__pb2.UInt64Value.FromString,
-            response_serializer=account__pb2.AccountResponse.SerializeToString,
-        ),
+            'Register': grpc.unary_unary_rpc_method_handler(
+                    servicer.Register,
+                    request_deserializer=account__pb2.RegisterRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.SerializeToString,
+            ),
+            'Login': grpc.unary_unary_rpc_method_handler(
+                    servicer.Login,
+                    request_deserializer=account__pb2.LoginRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_wrappers__pb2.StringValue.SerializeToString,
+            ),
+            'GetAccount': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetAccount,
+                    request_deserializer=google_dot_protobuf_dot_wrappers__pb2.UInt64Value.FromString,
+                    response_serializer=account__pb2.AccountResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        'pb.AccountService', rpc_method_handlers)
+            'pb.AccountService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers(
-        'pb.AccountService', rpc_method_handlers)
+    server.add_registered_method_handlers('pb.AccountService', rpc_method_handlers)
+
 
  # This class is part of an EXPERIMENTAL API.
-
-
 class AccountService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def Register(request,
-                 target,
-                 options=(),
-                 channel_credentials=None,
-                 call_credentials=None,
-                 insecure=False,
-                 compression=None,
-                 wait_for_ready=None,
-                 timeout=None,
-                 metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
@@ -134,15 +131,15 @@ class AccountService(object):
 
     @staticmethod
     def Login(request,
-              target,
-              options=(),
-              channel_credentials=None,
-              call_credentials=None,
-              insecure=False,
-              compression=None,
-              wait_for_ready=None,
-              timeout=None,
-              metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
@@ -161,15 +158,15 @@ class AccountService(object):
 
     @staticmethod
     def GetAccount(request,
-                   target,
-                   options=(),
-                   channel_credentials=None,
-                   call_credentials=None,
-                   insecure=False,
-                   compression=None,
-                   wait_for_ready=None,
-                   timeout=None,
-                   metadata=None):
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
         return grpc.experimental.unary_unary(
             request,
             target,
