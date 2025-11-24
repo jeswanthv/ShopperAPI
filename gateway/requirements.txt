@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+strawberry-graphql[fastapi]
+grpcio
+grpcio-tools
+httpx
+python-dotenv
