@@ -63,11 +63,6 @@ The system uses a **Gateway Pattern**. Clients communicate only with the GraphQL
 
 ---
 
-Here is a **Developer Commands** section you can add to your `README.md`. It documents the `Makefile` commands we just set up, making it much easier for others (and future you) to run the project.
-
-You can add this right after the **"Getting Started"** section.
-
-````markdown
 ## ⚡ Quick Start (Makefile)
 
 To simplify development, a `Makefile` is included to automate the setup, generation of gRPC code, and running of services.
@@ -96,7 +91,6 @@ If you are setting this up on a fresh machine, run these commands in order:
    ```bash
    make infra
    ```
-````
 
 2.  **Setup Project:**
 
@@ -223,10 +217,4 @@ mutation {
     checkoutUrl
   }
 }
-```
-
-_(Click the returned `checkoutUrl` to simulate a successful payment\!)_
-
-```
-
 ```
